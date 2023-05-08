@@ -1,0 +1,56 @@
+datasource db {
+  provider          = "postgresql"
+  url               = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl         = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+  shadowDatabaseUrl = env("POSTGRES_URL_NON_POOLING") // used for migrations
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               Int               @id @default(autoincrement())
+  name             String
+  password         String
+  email            String
+  xp               Int
+  matchesInitiated Match[]           @relation("initiator")
+  matchesGuested   Match[]           @relation("guest")
+  achivments       UserAchievement[]
+  Score            Score[]
+}
+
+model Match {
+  id          Int     @id @default(autoincrement())
+  initiator   User    @relation("initiator", fields: [initiatorId], references: [id])
+  initiatorId Int
+  guest       User    @relation("guest", fields: [guestId], references: [id])
+  guestId     Int
+  type        String
+  scores      Score[]
+}
+
+model Achievement {
+  id          Int               @id @default(autoincrement())
+  description String
+  xpBonus     Int
+  users       UserAchievement[]
+}
+
+model Score {
+  id      Int   @id @default(autoincrement())
+  match   Match @relation(fields: [matchId], references: [id])
+  matchId Int
+  user    User  @relation(fields: [userId], references: [id])
+  userId  Int
+  score   Int
+}
+
+model UserAchievement {
+  id            Int         @id @default(autoincrement())
+  user          User        @relation(fields: [userId], references: [id])
+  userId        Int
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  achievementId Int
+}
